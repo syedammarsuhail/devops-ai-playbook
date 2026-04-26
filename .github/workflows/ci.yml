@@ -101,17 +101,15 @@ jobs:
 
           sed -i "s|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:.*|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:${NEW_TAG}|g" gitops/k8s/frontend/deployment.yml
 
+      # 🔥 FINAL FIX (NO MORE MAIN BRANCH CONFLICT)
       - name: Commit and push updated manifests
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
+          git checkout -B gitops-update
+
           git add gitops/k8s/
           git diff --staged --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
 
-          # 🔥 ALWAYS HANDLE CONFLICTS (FINAL FIX)
-          for i in {1..5}; do
-            git pull --rebase origin main && git push origin main && break
-            echo "Retry $i failed... retrying in 3s"
-            sleep 3
-          done
+          git push origin gitops-update --force
