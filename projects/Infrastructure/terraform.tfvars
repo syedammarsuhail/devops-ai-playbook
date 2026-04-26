@@ -1,4 +1,4 @@
-region = "us-east-1"
+region = "ca-central-1"
 vpc_name = "EKS-Demo-VPC"
 vpc_cidr = "10.1.0.0/16"
 
@@ -6,18 +6,18 @@ vpc_cidr = "10.1.0.0/16"
   {
     name = "subnet-1"
     cidr_block = "10.1.1.0/24"
-    availability_zone = "us-east-1a"
+    availability_zone = "ca-central-1a"
   },
 
   {
     name = "subnet-2",
     cidr_block = "10.1.2.0/24",
-    availability_zone = "us-east-1b"
+    availability_zone = "ca-central-1b"
   },
   {
     name = "subnet-3",
     cidr_block = "10.1.3.0/24",
-    availability_zone = "us-east-1c"
+    availability_zone = "ca-central-1d"
   }
  ]
 
