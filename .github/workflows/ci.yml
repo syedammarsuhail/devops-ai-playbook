@@ -26,14 +26,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # ✅ FIXED: correct Docker password secret
+      # ✅ Docker login fixed
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # ✅ FIXED: AWS region explicitly passed
+      # ✅ AWS credentials + region fix
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -41,18 +41,21 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # ✅ Safe ECR login
       - name: Login to Amazon ECR
         run: |
+          ECR_URL=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+          echo "Logging into $ECR_URL"
           aws ecr get-login-password --region $AWS_REGION | \
-          docker login --username AWS \
-          --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+          docker login --username AWS --password-stdin $ECR_URL
 
-      # 🔥 NEW: auto-create ECR repo if not exists
+      # ✅ Auto-create ECR repos
       - name: Ensure ECR Repository Exists
         run: |
           aws ecr describe-repositories --repository-names ${{ matrix.service }} --region $AWS_REGION || \
           aws ecr create-repository --repository-name ${{ matrix.service }} --region $AWS_REGION
 
+      # ✅ Build images
       - name: Build Docker Image
         run: |
           if [ "${{ matrix.service }}" == "frontend" ]; then
@@ -63,6 +66,7 @@ jobs:
           echo "Building from $BUILD_PATH"
           docker build -t ${{ matrix.service }}:latest $BUILD_PATH
 
+      # ✅ Push to Docker Hub
       - name: Push to Docker Hub
         run: |
           docker tag ${{ matrix.service }}:latest ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:latest
@@ -70,6 +74,7 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
 
+      # ✅ Push to ECR
       - name: Push to Amazon ECR
         run: |
           ECR_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.service }}
@@ -90,6 +95,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # ✅ Update manifests
       - name: Update image tags in k8s manifests
         run: |
           NEW_TAG=${{ github.sha }}
@@ -103,10 +109,14 @@ jobs:
 
           sed -i "s|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:.*|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:${NEW_TAG}|g" gitops/k8s/frontend/deployment.yml
 
+      # ✅ FIXED: pull before push (no rejection)
       - name: Commit and push updated manifests
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
           git add gitops/k8s/
           git diff --staged --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
-          git push
+
+          git pull --rebase origin main
+          git push origin main
