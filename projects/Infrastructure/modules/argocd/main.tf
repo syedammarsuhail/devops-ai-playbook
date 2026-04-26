@@ -77,7 +77,7 @@ resource "helm_release" "monitoring" {
 
 # AWS Load Balancer Controller ServiceAccount with IRSA annotation
 
-resource "kubernetes_service_account" "lbc" {
+resource "kubernetes_service_account_v1" "lbc" {
   metadata {
     name      = "aws-load-balancer-controller"
     namespace = "kube-system"
@@ -96,32 +96,19 @@ resource "helm_release" "lbc" {
   chart      = "aws-load-balancer-controller"
   version    = "1.8.1"
 
-  set {
-    name  = "clusterName"
-    value = var.cluster_name
-  }
+  values = [
+    yamlencode({
+      clusterName = var.cluster_name
+      region      = var.region
+      vpcId       = var.vpc_id
+      serviceAccount = {
+        create = false
+        name   = "aws-load-balancer-controller"
+      }
+    })
+  ]
 
-  set {
-    name  = "serviceAccount.create"
-    value = "false"
-  }
-
-  set {
-    name  = "serviceAccount.name"
-    value = "aws-load-balancer-controller"
-  }
-
-  set {
-    name  = "region"
-    value = var.region
-  }
-
-  set {
-    name  = "vpcId"
-    value = var.vpc_id
-  }
-
-  depends_on = [kubernetes_service_account.lbc]
+  depends_on = [kubernetes_service_account_v1.lbc]
 }
 
 # Apply ArgoCD Application after ArgoCD is ready — triggers GitOps auto-sync
