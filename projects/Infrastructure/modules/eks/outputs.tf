@@ -21,3 +21,15 @@ output "node_group_arn" {
 output "node_group_status" {
   value = aws_eks_node_group.node_group.status
 }
+
+output "oidc_provider_arn" {
+  value = aws_iam_openid_connect_provider.eks.arn
+}
+
+output "oidc_issuer" {
+  value = replace(aws_eks_cluster.eks.identity[0].oidc[0].issuer, "https://", "")
+}
+
+output "lbc_role_arn" {
+  value = aws_iam_role.lbc_irsa.arn
+}

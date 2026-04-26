@@ -156,3 +156,37 @@ resource "aws_eks_addon" "ebs_csi" {
     aws_iam_role_policy_attachment.ebs_csi_irsa_policy
   ]
 }
+
+# AWS Load Balancer Controller IAM Policy + IRSA
+
+resource "aws_iam_policy" "lbc" {
+  name   = "AWSLoadBalancerControllerIAMPolicy"
+  policy = file("${path.module}/lbc-iam-policy.json")
+}
+
+data "aws_iam_policy_document" "lbc_assume_role" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.eks.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_eks_cluster.eks.identity[0].oidc[0].issuer, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:aws-load-balancer-controller"]
+    }
+  }
+}
+
+resource "aws_iam_role" "lbc_irsa" {
+  name               = "AmazonEKSLoadBalancerControllerRole"
+  assume_role_policy = data.aws_iam_policy_document.lbc_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "lbc_irsa_policy" {
+  role       = aws_iam_role.lbc_irsa.name
+  policy_arn = aws_iam_policy.lbc.arn
+}

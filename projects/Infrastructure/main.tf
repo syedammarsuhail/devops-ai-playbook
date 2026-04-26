@@ -61,6 +61,12 @@ module "argocd" {
     helm       = helm.eks
   }
 
+  cluster_name      = var.cluster_name
+  region            = var.region
+  vpc_id            = module.vpc.vpc_id
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  lbc_role_arn      = module.eks.lbc_role_arn
+
   depends_on = [module.eks]
 }
 

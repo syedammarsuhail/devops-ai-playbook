@@ -27,9 +27,9 @@ node_group_name = "eks-node-group"
 instance_types = ["m7i-flex.large"]
 capacity_type  = "ON_DEMAND"
 
-desired_size = 1
-min_size     = 1
-max_size     = 2
+desired_size = 2
+min_size     = 2
+max_size     = 3
 
 disk_size = 30
 
