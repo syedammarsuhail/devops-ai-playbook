@@ -101,7 +101,7 @@ jobs:
 
           sed -i "s|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:.*|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:${NEW_TAG}|g" gitops/k8s/frontend/deployment.yml
 
-      # 🔥 FINAL FIX (NO MORE MAIN BRANCH CONFLICT)
+      #  FINAL FIX (NO MORE MAIN BRANCH CONFLICT)
       - name: Commit and push updated manifests
         run: |
           git config user.name "github-actions"
