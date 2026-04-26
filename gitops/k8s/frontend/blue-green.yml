@@ -1,0 +1,68 @@
+
+# ─── BLUE Deployment (current live version) ───────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-blue
+  namespace: boutique
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: blue
+    spec:
+      containers:
+        - name: frontend
+          image: 339713148266.dkr.ecr.ca-central-1.amazonaws.com/frontend:blue
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REACT_APP_API_URL
+              value: http://gateway:3001/api
+---
+# ─── GREEN Deployment (new version - swap image tag here when ready) ──────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-green
+  namespace: boutique
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+      version: green
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: green
+    spec:
+      containers:
+        - name: frontend
+          image: 339713148266.dkr.ecr.ca-central-1.amazonaws.com/frontend:green
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REACT_APP_API_URL
+              value: http://gateway:3001/api
+---
+# ─── Service — change selector version: blue → green to switch traffic ────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-bg
+  namespace: boutique
+spec:
+  selector:
+    app: frontend
+    version: blue      # ← change to "green" to cut over traffic
+  ports:
+    - port: 3000
+      targetPort: 3000
