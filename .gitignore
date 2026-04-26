@@ -34,3 +34,10 @@ Thumbs.db
 
 # Environment variables
 .env
+.env.*
+
+# Claude Code memory
+.claude/
+
+# Terraform sensitive vars
+*.auto.tfvars
