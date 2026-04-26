@@ -42,7 +42,6 @@ jobs:
       - name: Login to Amazon ECR
         run: |
           ECR_URL=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-          echo "Logging into $ECR_URL"
           aws ecr get-login-password --region $AWS_REGION | \
           docker login --username AWS --password-stdin $ECR_URL
 
@@ -58,7 +57,6 @@ jobs:
           else
             BUILD_PATH="projects/boutique-microservices/backend/services/${{ matrix.service }}"
           fi
-          echo "Building from $BUILD_PATH"
           docker build -t ${{ matrix.service }}:latest $BUILD_PATH
 
       - name: Push to Docker Hub
@@ -101,15 +99,16 @@ jobs:
 
           sed -i "s|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:.*|${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/frontend:${NEW_TAG}|g" gitops/k8s/frontend/deployment.yml
 
-      #  FINAL FIX (NO MORE MAIN BRANCH CONFLICT)
       - name: Commit and push updated manifests
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git checkout -B gitops-update
+          # 🔥 FIX: handle detached HEAD properly
+          git checkout -b gitops-update || git checkout gitops-update
 
           git add gitops/k8s/
           git diff --staged --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
 
-          git push origin gitops-update --force
+          # 🔥 FIX: ensure branch is tracked + force push
+          git push --set-upstream origin gitops-update --force
