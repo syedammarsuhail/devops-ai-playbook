@@ -5,7 +5,8 @@ on:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
-  IMAGE_TAG: ${{ github.sha }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
 jobs:
   build-and-push:
@@ -26,6 +27,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -38,7 +45,7 @@ jobs:
           aws ecr get-login-password --region $AWS_REGION | \
           docker login --username AWS \
           --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
-     
+
       - name: Build Docker Image
         run: |
           if [ "${{ matrix.service }}" == "frontend" ]; then
@@ -46,19 +53,23 @@ jobs:
           else
             BUILD_PATH="projects/boutique-microservices/backend/services/${{ matrix.service }}"
           fi
-
           echo "Building from $BUILD_PATH"
+          docker build -t ${{ matrix.service }}:latest $BUILD_PATH
 
-          docker build \
-            -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.service }}:$IMAGE_TAG \
-          $BUILD_PATH
-
-
-      - name: Push Docker Image
+      - name: Push to Docker Hub
         run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ matrix.service }}:${{ github.sha }}
-          echo "Pushing $IMAGE_URI"
-          docker push $IMAGE_URI
+          docker tag ${{ matrix.service }}:latest ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:latest
+          docker tag ${{ matrix.service }}:latest ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}:${{ github.sha }}
+
+      - name: Push to Amazon ECR
+        run: |
+          ECR_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ matrix.service }}
+          docker tag ${{ matrix.service }}:latest $ECR_URI:latest
+          docker tag ${{ matrix.service }}:latest $ECR_URI:${{ github.sha }}
+          docker push $ECR_URI:latest
+          docker push $ECR_URI:${{ github.sha }}
 
   update-manifests:
     runs-on: ubuntu-latest
@@ -92,4 +103,3 @@ jobs:
           git add gitops/k8s/
           git diff --staged --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
           git push
-
