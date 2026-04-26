@@ -258,10 +258,31 @@ const theme = createTheme({
   },
 });
 
+const version = process.env.REACT_APP_VERSION || 'dev';
+const isGreen = version.toLowerCase().includes('green');
+
+const versionBannerStyle: React.CSSProperties = {
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  zIndex: 9999,
+  backgroundColor: isGreen ? '#2e7d32' : '#1565c0',
+  color: '#ffffff',
+  textAlign: 'center',
+  padding: '6px 0',
+  fontSize: '13px',
+  fontWeight: 600,
+  letterSpacing: '1px',
+};
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <div style={versionBannerStyle}>
+        {isGreen ? '🟢' : '🔵'} DEPLOYMENT: {version.toUpperCase()}
+      </div>
       <AuthProvider>
         <CartProvider>
           <Router>

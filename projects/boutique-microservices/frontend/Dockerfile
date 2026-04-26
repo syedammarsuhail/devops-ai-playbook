@@ -3,6 +3,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+ARG REACT_APP_VERSION=dev
+ENV REACT_APP_VERSION=$REACT_APP_VERSION
+
 # Copy package files
 COPY package*.json ./
 RUN npm install --production=false
