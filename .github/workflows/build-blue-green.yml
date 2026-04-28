@@ -29,6 +29,7 @@ jobs:
         run: |
           docker build \
             --build-arg REACT_APP_VERSION="Blue v1" \
+            --build-arg REACT_APP_API_URL=/api \
             -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:blue \
             projects/boutique-microservices/frontend
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:blue
@@ -54,6 +55,7 @@ jobs:
         run: |
           docker build \
             --build-arg REACT_APP_VERSION="Green v2" \
+            --build-arg REACT_APP_API_URL=/api \
             -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:green \
             projects/boutique-microservices/frontend
           docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/frontend:green
