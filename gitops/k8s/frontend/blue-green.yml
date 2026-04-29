@@ -62,7 +62,7 @@ metadata:
 spec:
   selector:
     app: frontend
-    version: blue      # ← change to "green" to cut over traffic
+    version: green     # ← change to "blue" to roll back
   ports:
     - port: 3000
       targetPort: 3000
