@@ -37,12 +37,12 @@ spec:
   selector:
     matchLabels:
       app: frontend
-      version: green
+      version: blue
   template:
     metadata:
       labels:
         app: frontend
-        version: green
+        version: blue
     spec:
       containers:
         - name: frontend

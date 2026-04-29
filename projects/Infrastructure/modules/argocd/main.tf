@@ -33,17 +33,25 @@ resource "helm_release" "argocd" {
   version    = "6.7.0"
 
   create_namespace = false
+  cleanup_on_fail  = true
+  timeout          = 600
+  wait             = false
 
   values = [
     yamlencode({
       server = {
         service = {
           type = "LoadBalancer"
+          annotations = {
+            "service.beta.kubernetes.io/aws-load-balancer-scheme" = "internet-facing"
+          }
         }
         extraArgs = ["--insecure"]
       }
     })
   ]
+
+  depends_on = [null_resource.wait_for_lbc]
 }
 
 # kube-prometheus-stack monitoring
@@ -109,6 +117,15 @@ resource "helm_release" "lbc" {
   ]
 
   depends_on = [kubernetes_service_account_v1.lbc]
+}
+
+# Wait for LBC webhook pod to be ready before installing anything that uses LoadBalancer services
+resource "null_resource" "wait_for_lbc" {
+  provisioner "local-exec" {
+    command = "aws eks update-kubeconfig --name ${var.cluster_name} --region ${var.region} && kubectl rollout status deployment/aws-load-balancer-controller -n kube-system --timeout=120s"
+  }
+
+  depends_on = [helm_release.lbc]
 }
 
 # Apply ArgoCD Application after ArgoCD is ready — triggers GitOps auto-sync
