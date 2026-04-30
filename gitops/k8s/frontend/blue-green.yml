@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 339713148266.dkr.ecr.ca-central-1.amazonaws.com/frontend:blue
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/frontend:blue
           ports:
             - containerPort: 3000
           env:
@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 339713148266.dkr.ecr.ca-central-1.amazonaws.com/frontend:green
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/frontend:green
           ports:
             - containerPort: 3000
           env:

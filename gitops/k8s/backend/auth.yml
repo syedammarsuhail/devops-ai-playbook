@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: 339713148266.dkr.ecr.ca-central-1.amazonaws.com/auth:3a0c912858ea8430f1f40b271f4c5af6723559ba
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/auth:latest
           ports:
             - containerPort: 3002
           env:

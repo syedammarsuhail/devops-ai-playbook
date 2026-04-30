@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 
 DEFAULT_CLUSTER = "eks-cluster"
 DEFAULT_NAMESPACE = "boutique"
-REGION = "ca-central-1"
-PROMETHEUS_URL = "http://ad2f6b3e5211a4280939a7b25e2d8ecf-1515246251.ca-central-1.elb.amazonaws.com:9090"
+REGION = "ca-central-1"                          # update to your region
+PROMETHEUS_URL = "http://<YOUR_PROMETHEUS_ELB>:9090"  # kubectl get svc -n monitoring
 
 def prometheus_query(query):
     """Run an instant PromQL query and return the result."""
